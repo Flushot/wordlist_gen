@@ -17,12 +17,12 @@ def all_subsets(ss):
                                 range(0, len(ss) + 1)))
 
 
-def load_charset(password_file):
-    password_file.seek(0)
-    for line in password_file:
-        password = line.rstrip()
-        if password:
-            yield password
+def load_charset(charset_file):
+    charset_file.seek(0)
+    for line in charset_file:
+        char_or_word = line.rstrip('\r\n')
+        if char_or_word:
+            yield char_or_word
 
 
 def get_total_permutations(charset):
@@ -41,17 +41,10 @@ def iterate_permutations(charset):
 
 def generate_wordlist(wordlist_file, charset_file, using_stdout):
     charset = list(load_charset(charset_file))
-
-    # Special case: Add spaces (since not read from file)
-    if ' ' not in charset:
-        charset.append(' ')
-
-    total_words = get_total_permutations(charset)
-
     gen = iterate_permutations(charset)
     if not using_stdout:
         gen = tqdm.tqdm(gen, 
-                        total=total_words,
+                        total=get_total_permutations(charset),
                         unit='word')
 
     for perm in gen:
@@ -66,10 +59,11 @@ def main():
     argp.add_argument('--output', '-o', 
                       metavar='OUTPUT_FILE', 
                       help='Wordlist output file (default: stdout)')
+    # TODO: add options for min/max password length to generate
     args = argp.parse_args()
 
     try:
-        # Open password file
+        # Open charset file
         if args.charset:
             charset_file = open(args.charset, 'r')
         else:
